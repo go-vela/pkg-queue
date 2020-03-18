@@ -5,12 +5,11 @@
 [![Go Report Card](https://goreportcard.com/badge/go-vela/pkg-queue)](https://goreportcard.com/report/go-vela/pkg-queue)
 [![codecov](https://codecov.io/gh/go-vela/pkg-queue/branch/master/graph/badge.svg)](https://codecov.io/gh/go-vela/pkg-queue)
 
-Vela package designed for supporting the ability to run a [go-vela/worker](https://github.com/go-vela/worker) in different runtimes.
+Vela package is designed to publish build items in work queues between [go-vela/server](https://github.com/go-vela/server) and [go-vela/worker](https://github.com/go-vela/worker).
 
-The following runtimes are supported:
+The following queues are supported:
 
-* [Docker](https://docker.io/)
-* [Kubernetes](https://kubernetes.io/)
+* [Redis](https://docker.io/)
 
 ## Documentation
 
