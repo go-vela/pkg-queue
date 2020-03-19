@@ -6,6 +6,7 @@ package redis
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -155,4 +156,36 @@ func pingQueue(client *redis.Client) error {
 	}
 
 	return fmt.Errorf("unable to establish connection to Redis queue")
+}
+
+// NewTest returns a Queue implementation that
+// integrates with a local Redis instance.
+//
+// It's possible to overide this with env variables,
+// which gets used as a part of integration testing
+// with the different supported backends.
+//
+// This function is intended for running tests only.
+func NewTest() (*client, error) {
+	config := os.Getenv("VELA_QUEUE_CONFIG")
+	if len(config) == 0 {
+		config = "localhost:6379"
+	}
+
+	// parse the url provided
+	options, err := redis.ParseURL(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// create the Redis client from the parsed url
+	queue := redis.NewClient(options)
+
+	// create the client object
+	client := &client{
+		Queue:   queue,
+		Options: options,
+	}
+
+	return client, nil
 }
