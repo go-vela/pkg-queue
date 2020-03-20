@@ -5,22 +5,32 @@
 package queue
 
 import (
-	"github.com/go-vela/types"
-	"github.com/go-vela/types/pipeline"
+	"fmt"
+
+	"github.com/go-vela/types/constants"
+	"github.com/sirupsen/logrus"
 )
 
-// Service represents the interface for Vela integrating
-// with the different supported Queue backends.
-type Service interface {
-	// Pop defines a function that grabs an
-	// item off the queue.
-	Pop() (*types.Item, error)
+// New creates and returns a Vela service capable of integrating
+// with the configured queue environments. Currently the
+// following queues are supported:
+//
+// * redis
+func New(s *Setup) (Service, error) {
+	// validate the setup being provided
+	err := s.Validate()
+	if err != nil {
+		return nil, err
+	}
 
-	// Push defines a function that publishes an
-	// item to the specified route in the queue.
-	Push(string, []byte) error
-
-	// Publish defines a function that decides which
-	// route a build gets placed within the queue.
-	Route(*pipeline.Worker) (string, error)
+	logrus.Debug("creating queue client from setup")
+	// process the queue driver being provided
+	switch s.Driver {
+	case constants.DriverKafka:
+		return s.Kafka()
+	case constants.DriverRedis:
+		return s.Redis()
+	default:
+		return nil, fmt.Errorf("invalid queue driver: %s", s.Driver)
+	}
 }
