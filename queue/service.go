@@ -20,7 +20,7 @@ type Service interface {
 	// item to the specified route in the queue.
 	Push(string, []byte) error
 
-	// Publish defines a function that decides which
-	// route a build gets placed within the queue.
+	// Route defines a function that decides which
+	// channel a build gets placed within the queue.
 	Route(*pipeline.Worker) (string, error)
 }
