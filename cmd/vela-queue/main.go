@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-vela/pkg-queue/queue"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
@@ -45,31 +46,10 @@ func main() {
 			Usage:  "set log level - options: (trace|debug|info|warn|error|fatal|panic)",
 			Value:  "info",
 		},
-
-		// Queue Flags
-
-		cli.StringFlag{
-			EnvVar: "VELA_QUEUE_DRIVER,QUEUE_DRIVER",
-			Name:   "queue.driver",
-			Usage:  "queue driver",
-		},
-		cli.StringFlag{
-			EnvVar: "VELA_QUEUE_CONFIG,QUEUE_CONFIG",
-			Name:   "queue.config",
-			Usage:  "queue driver configuration string",
-		},
-		cli.BoolFlag{
-			EnvVar: "VELA_QUEUE_CLUSTER,QUEUE_CLUSTER",
-			Name:   "queue.cluster",
-			Usage:  "queue client is setup for clusters",
-		},
-		// By default all builds are pushed to the "vela" route
-		cli.StringSliceFlag{
-			EnvVar: "VELA_QUEUE_WORKER_ROUTES,QUEUE_WORKER_ROUTES",
-			Name:   "queue.worker.routes",
-			Usage:  "queue worker routes is configuration for routing builds",
-		},
 	}
+
+	// Queue Flags
+	app.Flags = append(app.Flags, queue.Flags...)
 
 	err := app.Run(os.Args)
 	if err != nil {

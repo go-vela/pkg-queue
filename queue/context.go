@@ -6,37 +6,62 @@ package queue
 
 import (
 	"context"
+
+	"github.com/gin-gonic/gin"
 )
 
 // key defines the key type for storing
 // the queue Service in the context.
 const key = "queue"
 
-// Setter defines a context that enables setting values.
-type Setter interface {
-	Set(string, interface{})
-}
-
-// FromContext returns the queue Service
-// associated with this context.
+// FromContext retrieves the queue Service from the context.Context.
 func FromContext(c context.Context) Service {
-	// get queue value from context
+	// get queue value from context.Context
 	v := c.Value(key)
 	if v == nil {
 		return nil
 	}
 
 	// cast queue value to expected Service type
-	q, ok := v.(Service)
+	s, ok := v.(Service)
 	if !ok {
 		return nil
 	}
 
-	return q
+	return s
 }
 
-// ToContext adds the queue Service to this
-// context if it supports the Setter interface.
-func ToContext(c Setter, q Service) {
-	c.Set(key, q)
+// FromGinContext retrieves the queue Service from the gin.Context.
+func FromGinContext(c *gin.Context) Service {
+	// get queue value from gin.Context
+	//
+	// https://pkg.go.dev/github.com/gin-gonic/gin?tab=doc#Context.Get
+	v, ok := c.Get(key)
+	if !ok {
+		return nil
+	}
+
+	// cast queue value to expected Service type
+	s, ok := v.(Service)
+	if !ok {
+		return nil
+	}
+
+	return s
+}
+
+// WithContext inserts the queue Service into the context.Context.
+func WithContext(c context.Context, s Service) context.Context {
+	// set the queue Service in the context.Context
+	//
+	// https://pkg.go.dev/context?tab=doc#WithValue
+	return context.WithValue(c, key, s)
+}
+
+// WithGinContext inserts the queue Service into the gin.Context.
+func WithGinContext(c *gin.Context, s Service) {
+	// set the queue Service in the gin.Context
+	//
+	// https://pkg.go.dev/github.com/gin-gonic/gin?tab=doc#Context.Set
+	c.Set(key, s)
 }
