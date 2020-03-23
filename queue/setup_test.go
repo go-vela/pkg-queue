@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Bose/minisentinel"
+	"github.com/alicebob/miniredis/v2"
 	"github.com/go-vela/types/constants"
 )
 
@@ -30,6 +32,46 @@ func TestQueue_Kafka(t *testing.T) {
 
 	if !reflect.DeepEqual(reflect.TypeOf(err), reflect.TypeOf(want)) {
 		t.Errorf("Kafka is %+v, want %+v", got, want)
+	}
+}
+
+func TestQueue_Redis(t *testing.T) {
+	// setup redis
+	replica, _ := miniredis.Run()
+	redis := minisentinel.NewSentinel(replica, minisentinel.WithReplica(replica))
+	_ = redis.Start()
+
+	tests := []struct {
+		data *Setup
+		want error
+	}{
+		{ // test non for clustered redis client
+			data: &Setup{
+				Driver:  constants.DriverRedis,
+				Config:  fmt.Sprintf("redis://%s", replica.Addr()),
+				Cluster: false,
+				Routes:  []string{},
+			},
+			want: nil,
+		},
+		{ // test non for cluster redis client
+			data: &Setup{
+				Driver:  constants.DriverRedis,
+				Config:  fmt.Sprintf("redis://%s,%s", redis.MasterInfo().Name, redis.Addr()),
+				Cluster: true,
+				Routes:  []string{},
+			},
+			want: nil,
+		},
+	}
+
+	// run tests
+	for _, test := range tests {
+		// run test
+		_, err := test.data.Redis()
+		if err != nil {
+			t.Error("Redis should not have returned err: ", err)
+		}
 	}
 }
 
