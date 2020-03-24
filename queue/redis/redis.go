@@ -6,10 +6,10 @@ package redis
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
 )
@@ -32,8 +32,8 @@ func New(url string, channels ...string) (*client, error) {
 	// create the Redis client from the parsed url
 	queue := redis.NewClient(options)
 
-	// setup queue with proper configuration
-	err = setupQueue(queue)
+	// ping the queue
+	err = pingQueue(queue)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +60,8 @@ func NewCluster(config string, channels ...string) (*client, error) {
 	// create the Redis client from failover options
 	queue := redis.NewFailoverClient(failoverFromOptions(options))
 
-	// setup queue with proper configuration
-	err = setupQueue(queue)
+	// ping the queue
+	err = pingQueue(queue)
 	if err != nil {
 		return nil, err
 	}
@@ -122,18 +122,6 @@ func failoverFromOptions(source *redis.Options) *redis.FailoverOptions {
 	return target
 }
 
-// setupQueue is a helper function to setup the
-// queue with the proper configuration.
-func setupQueue(client *redis.Client) error {
-	// ping the queue
-	err := pingQueue(client)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // pingQueue is a helper function to send a "ping"
 // request with backoff to the database.
 //
@@ -166,25 +154,22 @@ func pingQueue(client *redis.Client) error {
 // with the different supported backends.
 //
 // This function is intended for running tests only.
-func NewTest() (*client, error) {
-	config := os.Getenv("VELA_QUEUE_CONFIG")
-	if len(config) == 0 {
-		config = "localhost:6379"
-	}
-
-	// parse the url provided
-	options, err := redis.ParseURL(config)
+func NewTest(channels ...string) (*client, error) {
+	// run a local fake redis instance
+	mr, err := miniredis.Run()
 	if err != nil {
 		return nil, err
 	}
 
 	// create the Redis client from the parsed url
-	queue := redis.NewClient(options)
+	queue := redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
 
 	// create the client object
 	client := &client{
-		Queue:   queue,
-		Options: options,
+		Queue:    queue,
+		Channels: channels,
 	}
 
 	return client, nil

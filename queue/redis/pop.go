@@ -6,24 +6,34 @@ package redis
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/go-vela/types"
+	"github.com/sirupsen/logrus"
 )
 
 // Pop grabs an item from the specified channel off the queue.
 func (c *client) Pop() (*types.Item, error) {
-	// blocking list pop item from queue
-	result, err := c.Queue.BLPop(0, c.Channels...).Result()
+	logrus.Tracef("popping item from queue %s", c.Channels)
+
+	// build a redis queue command to pop an item from queue
+	//
+	// https://pkg.go.dev/github.com/go-redis/redis?tab=doc#Client.BLPop
+	popCmd := c.Queue.BLPop(0, c.Channels...)
+
+	// blocking call to pop item from queue
+	//
+	// https://pkg.go.dev/github.com/go-redis/redis?tab=doc#StringSliceCmd.Result
+	result, err := popCmd.Result()
 	if err != nil {
-		return nil, fmt.Errorf("unable to pop item from queue: %w", err)
+		return nil, err
 	}
 
 	item := new(types.Item)
+
 	// unmarshal result into queue item
 	err = json.Unmarshal([]byte(result[1]), item)
 	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal item from queue: %w", err)
+		return nil, err
 	}
 
 	return item, nil
