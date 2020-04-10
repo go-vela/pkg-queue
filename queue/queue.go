@@ -18,6 +18,8 @@ import (
 // * redis
 func New(s *Setup) (Service, error) {
 	// validate the setup being provided
+	//
+	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue?tab=doc#Setup.Validate
 	err := s.Validate()
 	if err != nil {
 		return nil, err
@@ -27,8 +29,14 @@ func New(s *Setup) (Service, error) {
 	// process the queue driver being provided
 	switch s.Driver {
 	case constants.DriverKafka:
+		// handle the Kafka queue driver being provided
+		//
+		// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue?tab=doc#Setup.Kafka
 		return s.Kafka()
 	case constants.DriverRedis:
+		// handle the Redis queue driver being provided
+		//
+		// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue?tab=doc#Setup.Redis
 		return s.Redis()
 	default:
 		return nil, fmt.Errorf("invalid queue driver: %s", s.Driver)
