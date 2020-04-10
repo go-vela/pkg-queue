@@ -16,10 +16,14 @@ import (
 // creating a Vela service capable of integrating
 // with a configured queue environment.
 type Setup struct {
-	Driver  string
+	// specifies the queue driver to use
+	Driver string
+	// enables the queue client to integrate with a cluster
 	Cluster bool
-	Config  string
-	Routes  []string
+	// configuration string for the queue
+	Config string
+	// channels to listen on for the queue
+	Routes []string
 }
 
 // Redis creates and returns a Vela engine capable of
@@ -30,11 +34,18 @@ func (s *Setup) Redis() (Service, error) {
 
 	if s.Cluster {
 		logrus.Tracef("Creating %s queue cluster client from CLI configuration", constants.DriverRedis)
+
+		// create new Redis queue service
+		//
+		// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#NewCluster
 		return redis.NewCluster(s.Config, routes...)
 	}
 
 	logrus.Tracef("Creating %s queue client from CLI configuration", constants.DriverRedis)
 
+	// create new Redis queue service
+	//
+	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#New
 	return redis.New(s.Config, routes...)
 }
 

@@ -8,7 +8,19 @@ import "github.com/urfave/cli/v2"
 
 // Flags represents all supported command line
 // interface (CLI) flags for the queue.
+//
+// https://pkg.go.dev/github.com/urfave/cli?tab=doc#Flag
 var Flags = []cli.Flag{
+
+	&cli.StringFlag{
+		EnvVars: []string{"QUEUE_LOG_LEVEL", "VELA_LOG_LEVEL", "LOG_LEVEL"},
+		Name:    "queue.log.level",
+		Usage:   "set log level - options: (trace|debug|info|warn|error|fatal|panic)",
+		Value:   "info",
+	},
+
+	// Queue Flags
+
 	&cli.StringFlag{
 		EnvVars: []string{"VELA_QUEUE_DRIVER", "QUEUE_DRIVER"},
 		Name:    "queue.driver",
