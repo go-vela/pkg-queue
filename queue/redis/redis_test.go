@@ -146,10 +146,6 @@ func TestRedis_New_Failure(t *testing.T) {
 			data: redis.Addr(),
 			want: fmt.Errorf(""),
 		},
-		{ // connection uri that will timeout
-			data: fmt.Sprintf("redis://%s", "localhost"),
-			want: fmt.Errorf(""),
-		},
 	}
 
 	// run tests
