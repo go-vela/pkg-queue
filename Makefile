@@ -2,18 +2,23 @@
 #
 # Use of this source code is governed by the LICENSE file in this repository.
 
-build: binary-build
-
-redis-test: build redis-run
-
+.PHONY: run
 run: build redis-run
 
-test: build redis-run
+.PHONY: test
+test: redis-test
+
+.PHONY: redis-test
+redis-test: build redis-run
+
+.PHONY: build
+build: binary-build
 
 #################################
 ######      Go clean       ######
 #################################
 
+.PHONY: clean
 clean:
 
 	@go mod tidy
@@ -25,6 +30,7 @@ clean:
 ######    Build Binary     ######
 #################################
 
+.PHONY: binary-build
 binary-build:
 
 	GOOS=darwin CGO_ENABLED=0 \
@@ -36,6 +42,7 @@ binary-build:
 #####          Docker Run          #####
 ########################################
 
+.PHONY: redis-run
 redis-run:
 
 	release/vela-queue \
