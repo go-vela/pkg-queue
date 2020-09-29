@@ -8,8 +8,8 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-redis/redis v6.15.8+incompatible
-	github.com/go-vela/sdk-go v0.6.0-rc2
-	github.com/go-vela/types v0.6.0-rc2
+	github.com/go-vela/sdk-go v0.6.0
+	github.com/go-vela/types v0.6.0
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/kr/pretty v0.1.0 // indirect
