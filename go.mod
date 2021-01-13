@@ -12,18 +12,14 @@ require (
 	github.com/go-vela/types v0.7.0-rc1
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.4 // indirect
-	github.com/google/uuid v1.1.2 // indirect
 	github.com/joho/godotenv v1.3.0
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.4 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1 // indirect
-	github.com/ugorji/go v1.1.11 // indirect
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
-	golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
 )
