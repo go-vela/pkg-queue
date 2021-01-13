@@ -114,7 +114,7 @@ var (
 	_user = &library.User{
 		ID:     vela.Int64(1),
 		Name:   vela.String("octocat"),
-		Token:  vela.String("superSecretToken"),
+		Token:  nil,
 		Hash:   nil,
 		Active: vela.Bool(true),
 		Admin:  vela.Bool(false),
