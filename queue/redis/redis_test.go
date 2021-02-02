@@ -16,7 +16,7 @@ import (
 	"github.com/go-vela/types/pipeline"
 )
 
-// setup global variables used for testing
+// setup global variables used for testing.
 var (
 	_build = &library.Build{
 		ID:           vela.Int64(1),

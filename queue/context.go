@@ -55,6 +55,8 @@ func WithContext(c context.Context, s Service) context.Context {
 	// set the queue Service in the context.Context
 	//
 	// https://pkg.go.dev/context?tab=doc#WithValue
+	//
+	// nolint: golint,staticcheck // ignore using string with context value
 	return context.WithValue(c, key, s)
 }
 
