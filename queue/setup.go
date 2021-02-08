@@ -73,10 +73,6 @@ func (s *Setup) Validate() error {
 		return fmt.Errorf("queue.config (VELA_QUEUE_CONFIG or QUEUE_CONFIG) flag not specified")
 	}
 
-	if s.Timeout == 0 {
-		return fmt.Errorf("queue.worker.blpop.timeout (VELA_QUEUE_BLPOP_TIMEOUT or QUEUE_BLPOP_TIMEOUT) flag not specified")
-	}
-
 	// setup is valid
 	return nil
 }

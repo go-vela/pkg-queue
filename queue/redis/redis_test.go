@@ -7,6 +7,7 @@ package redis
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Bose/minisentinel"
 	"github.com/alicebob/miniredis/v2"
@@ -129,7 +130,7 @@ func TestRedis_New_Success(t *testing.T) {
 	uri := fmt.Sprintf("redis://%s", redis.Addr())
 
 	// run test
-	_, err := New(uri, constants.DefaultRoute)
+	_, err := New(uri, 5*time.Second, constants.DefaultRoute)
 	if err != nil {
 		t.Error("New should not have returned err: ", err)
 	}
@@ -152,7 +153,7 @@ func TestRedis_New_Failure(t *testing.T) {
 	// run tests
 	for _, test := range tests {
 		// run test
-		_, err := New(test.data, constants.DefaultRoute)
+		_, err := New(test.data, 5*time.Second, constants.DefaultRoute)
 		if err == nil {
 			t.Errorf("New should have returned err")
 		}
@@ -198,7 +199,7 @@ func TestRedis_NewCluster_Failure(t *testing.T) {
 	// run tests
 	for _, test := range tests {
 		// run test
-		_, err := New(test.data, constants.DefaultRoute)
+		_, err := New(test.data, 5*time.Second, constants.DefaultRoute)
 		if err == nil {
 			t.Errorf("New should have returned err")
 		}
