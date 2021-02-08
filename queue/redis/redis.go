@@ -18,6 +18,7 @@ type client struct {
 	Queue    *redis.Client
 	Options  *redis.Options
 	Channels []string
+	Timeout  time.Duration
 }
 
 // New returns a Queue implementation that
