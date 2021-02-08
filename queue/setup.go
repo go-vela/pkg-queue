@@ -49,7 +49,7 @@ func (s *Setup) Redis() (Service, error) {
 	// create new Redis queue service
 	//
 	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#New
-	return redis.New(s.Config, routes...)
+	return redis.New(s.Config, s.Timeout, routes...)
 }
 
 // Kafka creates and returns a Vela engine capable of
@@ -71,6 +71,10 @@ func (s *Setup) Validate() error {
 
 	if len(s.Config) == 0 {
 		return fmt.Errorf("queue.config (VELA_QUEUE_CONFIG or QUEUE_CONFIG) flag not specified")
+	}
+
+	if s.Timeout == 0 {
+		return fmt.Errorf("queue.worker.blpop.timeout (VELA_QUEUE_BLPOP_TIMEOUT or QUEUE_BLPOP_TIMEOUT) flag not specified")
 	}
 
 	// setup is valid
