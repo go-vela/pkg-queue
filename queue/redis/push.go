@@ -10,7 +10,7 @@ import (
 
 // Push inserts an item to the specified channel in the queue.
 func (c *client) Push(channel string, item []byte) error {
-	logrus.Tracef("pushing item to queue %s", c.Channels)
+	logrus.Tracef("pushing item to queue %s", channel)
 
 	// build a redis queue command to push an item to queue
 	//

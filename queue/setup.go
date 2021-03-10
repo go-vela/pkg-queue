@@ -6,6 +6,7 @@ package queue
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/go-vela/pkg-queue/queue/redis"
 	"github.com/go-vela/types/constants"
@@ -29,24 +30,19 @@ type Setup struct {
 // Redis creates and returns a Vela engine capable of
 // integrating with a Redis queue.
 func (s *Setup) Redis() (Service, error) {
-	// setup routes
-	routes := append(s.Routes, constants.DefaultRoute)
-
-	if s.Cluster {
-		logrus.Tracef("Creating %s queue cluster client from CLI configuration", constants.DriverRedis)
-
-		// create new Redis queue service
-		//
-		// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#NewCluster
-		return redis.NewCluster(s.Config, routes...)
+	// check if the default route is provided
+	if !strings.Contains(strings.Join(s.Routes, ","), constants.DefaultRoute) {
+		s.Routes = append(s.Routes, constants.DefaultRoute)
 	}
-
-	logrus.Tracef("Creating %s queue client from CLI configuration", constants.DriverRedis)
 
 	// create new Redis queue service
 	//
 	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#New
-	return redis.New(s.Config, routes...)
+	return redis.New(
+		redis.WithAddress(s.Config),
+		redis.WithChannels(s.Routes...),
+		redis.WithCluster(s.Cluster),
+	)
 }
 
 // Kafka creates and returns a Vela engine capable of
