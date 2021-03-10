@@ -19,13 +19,13 @@ import (
 type Setup struct {
 	// Queue Configuration
 
-	// specifies the queue driver to use
+	// specifies the driver to use for the queue client
 	Driver string
-	// specifies the queue address to use
+	// specifies the address to use for the queue client
 	Address string
 	// enables the client to integrate with a queue cluster
 	Cluster bool
-	// specifies a list of routes (channels/topics) for managing builds
+	// specifies a list of routes (channels/topics) for managing builds for the queue client
 	Routes []string
 }
 

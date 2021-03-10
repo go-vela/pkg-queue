@@ -5,12 +5,10 @@
 package queue
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
-
-	"github.com/go-vela/pkg-queue/queue/redis"
 )
 
 func TestQueue_New(t *testing.T) {
@@ -19,35 +17,25 @@ func TestQueue_New(t *testing.T) {
 	// create a local fake redis instance
 	//
 	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
-	mr, err := miniredis.Run()
+	_redis, err := miniredis.Run()
 	if err != nil {
 		t.Errorf("unable to create miniredis instance: %v", err)
 	}
-
-	_redis, err := redis.New(
-		redis.WithAddress(mr.Addr()),
-		redis.WithChannels("foo"),
-		redis.WithCluster(false),
-	)
-	if err != nil {
-		t.Errorf("unable to create redis service: %v", err)
-	}
+	defer _redis.Close()
 
 	// setup tests
 	tests := []struct {
 		failure bool
 		setup   *Setup
-		want    Service
 	}{
 		{
 			failure: false,
 			setup: &Setup{
 				Driver:  "redis",
-				Address: mr.Addr(),
+				Address: fmt.Sprintf("redis://%s", _redis.Addr()),
 				Routes:  []string{"foo"},
 				Cluster: false,
 			},
-			want: _redis,
 		},
 		{
 			failure: true,
@@ -57,7 +45,6 @@ func TestQueue_New(t *testing.T) {
 				Routes:  []string{"foo"},
 				Cluster: false,
 			},
-			want: nil,
 		},
 		{
 			failure: true,
@@ -67,7 +54,6 @@ func TestQueue_New(t *testing.T) {
 				Routes:  []string{"foo"},
 				Cluster: false,
 			},
-			want: nil,
 		},
 		{
 			failure: true,
@@ -77,21 +63,16 @@ func TestQueue_New(t *testing.T) {
 				Routes:  []string{"foo"},
 				Cluster: false,
 			},
-			want: nil,
 		},
 	}
 
 	// run tests
 	for _, test := range tests {
-		got, err := New(test.setup)
+		_, err := New(test.setup)
 
 		if test.failure {
 			if err == nil {
 				t.Errorf("New should have returned err")
-			}
-
-			if !reflect.DeepEqual(got, test.want) {
-				t.Errorf("New is %v, want %v", got, test.want)
 			}
 
 			continue
@@ -99,10 +80,6 @@ func TestQueue_New(t *testing.T) {
 
 		if err != nil {
 			t.Errorf("New returned err: %v", err)
-		}
-
-		if !reflect.DeepEqual(got, test.want) {
-			t.Errorf("New is %v, want %v", got, test.want)
 		}
 	}
 }

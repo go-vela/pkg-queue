@@ -5,9 +5,11 @@
 package redis
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/Bose/minisentinel"
 	"github.com/alicebob/miniredis/v2"
 )
 
@@ -17,10 +19,11 @@ func TestRedis_ClientOpt_WithAddress(t *testing.T) {
 	// create a local fake redis instance
 	//
 	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
-	mr, err := miniredis.Run()
+	_redis, err := miniredis.Run()
 	if err != nil {
 		t.Errorf("unable to create miniredis instance: %v", err)
 	}
+	defer _redis.Close()
 
 	tests := []struct {
 		failure bool
@@ -29,8 +32,8 @@ func TestRedis_ClientOpt_WithAddress(t *testing.T) {
 	}{
 		{
 			failure: false,
-			address: mr.Addr(),
-			want:    mr.Addr(),
+			address: fmt.Sprintf("redis://%s", _redis.Addr()),
+			want:    fmt.Sprintf("redis://%s", _redis.Addr()),
 		},
 		{
 			failure: true,
@@ -65,6 +68,16 @@ func TestRedis_ClientOpt_WithAddress(t *testing.T) {
 
 func TestRedis_ClientOpt_WithChannels(t *testing.T) {
 	// setup tests
+
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	_redis, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("unable to create miniredis instance: %v", err)
+	}
+	defer _redis.Close()
+
 	tests := []struct {
 		failure  bool
 		channels []string
@@ -85,6 +98,7 @@ func TestRedis_ClientOpt_WithChannels(t *testing.T) {
 	// run tests
 	for _, test := range tests {
 		_service, err := New(
+			WithAddress(fmt.Sprintf("redis://%s", _redis.Addr())),
 			WithChannels(test.channels...),
 		)
 
@@ -108,15 +122,46 @@ func TestRedis_ClientOpt_WithChannels(t *testing.T) {
 
 func TestRedis_ClientOpt_WithCluster(t *testing.T) {
 	// setup tests
+
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	_primary, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("unable to create primary miniredis instance: %v", err)
+	}
+	defer _primary.Close()
+
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	_replica, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("unable to create primary miniredis instance: %v", err)
+	}
+	defer _replica.Close()
+
+	// create a local fake redis cluster
+	//
+	// https://pkg.go.dev/github.com/Bose/minisentinel#Run
+	_cluster, err := minisentinel.Run(_primary, minisentinel.WithReplica(_replica))
+	if err != nil {
+		t.Errorf("unable to create miniredis cluster: %v", err)
+	}
+	defer _cluster.Close()
+
 	tests := []struct {
+		address string
 		cluster bool
 		want    bool
 	}{
 		{
+			address: fmt.Sprintf("redis://%s,%s", _cluster.MasterInfo().Name, _cluster.Addr()),
 			cluster: true,
 			want:    true,
 		},
 		{
+			address: fmt.Sprintf("redis://%s", _cluster.Addr()),
 			cluster: false,
 			want:    false,
 		},
@@ -125,6 +170,7 @@ func TestRedis_ClientOpt_WithCluster(t *testing.T) {
 	// run tests
 	for _, test := range tests {
 		_service, err := New(
+			WithAddress(test.address),
 			WithCluster(test.cluster),
 		)
 

@@ -5,8 +5,10 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/go-vela/sdk-go/vela"
 	"github.com/go-vela/types/library"
 	"github.com/go-vela/types/pipeline"
@@ -118,6 +120,17 @@ var (
 )
 
 func TestRedis_New(t *testing.T) {
+	// setup types
+
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	_redis, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("unable to create miniredis instance: %v", err)
+	}
+	defer _redis.Close()
+
 	// setup tests
 	tests := []struct {
 		failure bool
@@ -125,7 +138,7 @@ func TestRedis_New(t *testing.T) {
 	}{
 		{
 			failure: false,
-			address: "redis://redis.example.com",
+			address: fmt.Sprintf("redis://%s", _redis.Addr()),
 		},
 		{
 			failure: true,

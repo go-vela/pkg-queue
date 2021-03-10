@@ -5,11 +5,10 @@
 package queue
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-vela/pkg-queue/queue/redis"
 )
 
 func TestQueue_Setup_Redis(t *testing.T) {
@@ -18,34 +17,22 @@ func TestQueue_Setup_Redis(t *testing.T) {
 	// create a local fake redis instance
 	//
 	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
-	mr, err := miniredis.Run()
+	_redis, err := miniredis.Run()
 	if err != nil {
 		t.Errorf("unable to create miniredis instance: %v", err)
 	}
+	defer _redis.Close()
 
 	_setup := &Setup{
 		Driver:  "redis",
-		Address: mr.Addr(),
+		Address: fmt.Sprintf("redis://%s", _redis.Addr()),
 		Routes:  []string{"foo"},
 		Cluster: false,
 	}
 
-	want, err := redis.New(
-		redis.WithAddress(mr.Addr()),
-		redis.WithChannels("foo"),
-		redis.WithCluster(false),
-	)
-	if err != nil {
-		t.Errorf("unable to create redis service: %v", err)
-	}
-
-	got, err := _setup.Redis()
+	_, err = _setup.Redis()
 	if err != nil {
 		t.Errorf("Redis returned err: %v", err)
-	}
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Redis is %v, want %v", got, want)
 	}
 }
 

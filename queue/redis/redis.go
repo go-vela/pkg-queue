@@ -161,13 +161,13 @@ func NewTest(channels ...string) (*client, error) {
 	// create a local fake redis instance
 	//
 	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
-	mr, err := miniredis.Run()
+	_redis, err := miniredis.Run()
 	if err != nil {
 		return nil, err
 	}
 
 	return New(
-		WithAddress(mr.Addr()),
+		WithAddress(fmt.Sprintf("redis://%s", _redis.Addr())),
 		WithChannels(channels...),
 		WithCluster(false),
 	)
