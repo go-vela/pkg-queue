@@ -41,6 +41,6 @@ func New(s *Setup) (Service, error) {
 		// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue?tab=doc#Setup.Redis
 		return s.Redis()
 	default:
-		return nil, fmt.Errorf("invalid queue driver: %s", s.Driver)
+		return nil, fmt.Errorf("invalid queue driver provided: %s", s.Driver)
 	}
 }

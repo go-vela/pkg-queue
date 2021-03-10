@@ -5,109 +5,154 @@
 package queue
 
 import (
-	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
-	"github.com/Bose/minisentinel"
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-vela/types/constants"
+	"github.com/go-vela/pkg-queue/queue/redis"
 )
 
-func TestQueue_Kafka(t *testing.T) {
+func TestQueue_Setup_Redis(t *testing.T) {
 	// setup types
-	s := &Setup{Driver: constants.DriverKafka, Config: "localhost:9946"}
-	want := fmt.Errorf("unsupported queue driver: %s", constants.DriverKafka)
 
-	// run test
-	got, err := s.Kafka()
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("unable to create miniredis instance: %v", err)
+	}
+
+	_setup := &Setup{
+		Driver:  "redis",
+		Address: mr.Addr(),
+		Routes:  []string{"foo"},
+		Cluster: false,
+	}
+
+	want, err := redis.New(
+		redis.WithAddress(mr.Addr()),
+		redis.WithChannels("foo"),
+		redis.WithCluster(false),
+	)
+	if err != nil {
+		t.Errorf("unable to create redis service: %v", err)
+	}
+
+	got, err := _setup.Redis()
+	if err != nil {
+		t.Errorf("Redis returned err: %v", err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Redis is %v, want %v", got, want)
+	}
+}
+
+func TestQueue_Setup_Kafka(t *testing.T) {
+	// setup types
+	_setup := &Setup{
+		Driver:  "kafka",
+		Address: "kafka://kafka.example.com",
+		Routes:  []string{"foo"},
+		Cluster: false,
+	}
+
+	got, err := _setup.Kafka()
 	if err == nil {
-		t.Error("Kafka should have returned err")
+		t.Errorf("Kafka should have returned err")
 	}
 
-	if !(got == nil) {
-		t.Errorf("Kafka is %+v, want %+v", got, nil)
-	}
-
-	if !reflect.DeepEqual(reflect.TypeOf(err), reflect.TypeOf(want)) {
-		t.Errorf("Kafka is %+v, want %+v", got, want)
+	if got != nil {
+		t.Errorf("Kafka is %v, want nil", got)
 	}
 }
 
-func TestQueue_Redis(t *testing.T) {
-	// setup redis
-	replica, _ := miniredis.Run()
-	redis := minisentinel.NewSentinel(replica, minisentinel.WithReplica(replica))
-	_ = redis.Start()
-
+func TestSource_Setup_Validate(t *testing.T) {
+	// setup tests
 	tests := []struct {
-		data *Setup
-		want error
+		failure bool
+		setup   *Setup
 	}{
-		{ // test non for clustered redis client
-			data: &Setup{
-				Driver:  constants.DriverRedis,
-				Config:  fmt.Sprintf("redis://%s", replica.Addr()),
+		{
+			failure: false,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: "redis://redis.example.com",
+				Routes:  []string{"foo"},
 				Cluster: false,
-				Routes:  []string{},
 			},
-			want: nil,
 		},
-		{ // test non for cluster redis client
-			data: &Setup{
-				Driver:  constants.DriverRedis,
-				Config:  fmt.Sprintf("redis://%s,%s", redis.MasterInfo().Name, redis.Addr()),
-				Cluster: true,
-				Routes:  []string{},
+		{
+			failure: false,
+			setup: &Setup{
+				Driver:  "kafka",
+				Address: "kafka://kafka.example.com",
+				Routes:  []string{"foo"},
+				Cluster: false,
 			},
-			want: nil,
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: "redis://redis.example.com/",
+				Routes:  []string{"foo"},
+				Cluster: false,
+			},
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: "redis.example.com",
+				Routes:  []string{"foo"},
+				Cluster: false,
+			},
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "",
+				Address: "redis://redis.example.com",
+				Routes:  []string{"foo"},
+				Cluster: false,
+			},
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: "",
+				Routes:  []string{"foo"},
+				Cluster: false,
+			},
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: "redis://redis.example.com",
+				Routes:  []string{},
+				Cluster: false,
+			},
 		},
 	}
 
 	// run tests
 	for _, test := range tests {
-		// run test
-		_, err := test.data.Redis()
+		err := test.setup.Validate()
+
+		if test.failure {
+			if err == nil {
+				t.Errorf("Validate should have returned err")
+			}
+
+			continue
+		}
+
 		if err != nil {
-			t.Error("Redis should not have returned err: ", err)
-		}
-	}
-}
-
-func TestQueue_Validate(t *testing.T) {
-	// setup types
-	tests := []struct {
-		data *Setup
-		want error
-	}{
-		{
-			// test if the queue setup is empty
-			data: &Setup{},
-			want: fmt.Errorf("queue.driver (VELA_QUEUE_DRIVER or QUEUE_DRIVER) flag not specified"),
-		},
-		{
-			// test if the queue provided is set with default value
-			data: &Setup{Driver: "foobar"},
-			want: fmt.Errorf("queue.config (VELA_QUEUE_CONFIG or QUEUE_CONFIG) flag not specified"),
-		},
-		{
-			// test if the queue provided is set with default value
-			data: &Setup{Config: ""},
-			want: fmt.Errorf("queue.driver (VELA_QUEUE_DRIVER or QUEUE_DRIVER) flag not specified"),
-		},
-	}
-
-	// run tests
-	for _, test := range tests {
-		// run test
-		err := test.data.Validate()
-		if err == nil {
-			t.Error("Validate should have returned err")
-		}
-
-		if !strings.EqualFold(err.Error(), test.want.Error()) {
-			t.Errorf("Err is %v, want %v", err, test.want)
+			t.Errorf("Validate returned err: %v", err)
 		}
 	}
 }

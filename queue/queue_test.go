@@ -5,40 +5,77 @@
 package queue
 
 import (
-	"fmt"
-	"strings"
+	"reflect"
 	"testing"
 
-	"github.com/Bose/minisentinel"
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-vela/types/constants"
+
+	"github.com/go-vela/pkg-queue/queue/redis"
 )
 
-func TestQueue_New_Success(t *testing.T) {
-	// setup redis
-	replica, _ := miniredis.Run()
-	redis := minisentinel.NewSentinel(replica, minisentinel.WithReplica(replica))
-	_ = redis.Start()
+func TestQueue_New(t *testing.T) {
+	// setup types
 
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("unable to create miniredis instance: %v", err)
+	}
+
+	_redis, err := redis.New(
+		redis.WithAddress(mr.Addr()),
+		redis.WithChannels("foo"),
+		redis.WithCluster(false),
+	)
+	if err != nil {
+		t.Errorf("unable to create redis service: %v", err)
+	}
+
+	// setup tests
 	tests := []struct {
-		data *Setup
-		want error
+		failure bool
+		setup   *Setup
+		want    Service
 	}{
-		{ // test non for clustered redis client
-			data: &Setup{
-				Driver:  constants.DriverRedis,
-				Config:  fmt.Sprintf("redis://%s", replica.Addr()),
+		{
+			failure: false,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: mr.Addr(),
+				Routes:  []string{"foo"},
 				Cluster: false,
-				Routes:  []string{},
+			},
+			want: _redis,
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "kafka",
+				Address: "kafka://kafka.example.com",
+				Routes:  []string{"foo"},
+				Cluster: false,
 			},
 			want: nil,
 		},
-		{ // test non for cluster redis client
-			data: &Setup{
-				Driver:  constants.DriverRedis,
-				Config:  fmt.Sprintf("redis://%s,%s", redis.MasterInfo().Name, redis.Addr()),
-				Cluster: true,
-				Routes:  []string{},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "pubsub",
+				Address: "pubsub://pubsub.example.com",
+				Routes:  []string{"foo"},
+				Cluster: false,
+			},
+			want: nil,
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: "",
+				Routes:  []string{"foo"},
+				Cluster: false,
 			},
 			want: nil,
 		},
@@ -46,39 +83,26 @@ func TestQueue_New_Success(t *testing.T) {
 
 	// run tests
 	for _, test := range tests {
-		// run test
-		_, err := New(test.data)
+		got, err := New(test.setup)
+
+		if test.failure {
+			if err == nil {
+				t.Errorf("New should have returned err")
+			}
+
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("New is %v, want %v", got, test.want)
+			}
+
+			continue
+		}
+
 		if err != nil {
-			t.Errorf("New should not have returned err: %w", err)
-		}
-	}
-}
-
-func TestQueue_New_Failure(t *testing.T) {
-	tests := []struct {
-		data *Setup
-		want error
-	}{
-		{ // test for unsupported kafka
-			data: &Setup{Driver: "kafka", Config: "localhost:9946"},
-			want: fmt.Errorf("unsupported queue driver: kafka"),
-		},
-		{ // test for invalid queues
-			data: &Setup{Driver: "foobar", Config: "bad:config"},
-			want: fmt.Errorf("invalid queue driver: foobar"),
-		},
-	}
-
-	// run tests
-	for _, test := range tests {
-		// run test
-		_, err := New(test.data)
-		if err == nil {
-			t.Error("New should have returned err")
+			t.Errorf("New returned err: %v", err)
 		}
 
-		if !strings.EqualFold(err.Error(), test.want.Error()) {
-			t.Errorf("Err is %v, want %v", err, test.want)
+		if !reflect.DeepEqual(got, test.want) {
+			t.Errorf("New is %v, want %v", got, test.want)
 		}
 	}
 }
