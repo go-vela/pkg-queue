@@ -4,7 +4,11 @@
 
 package queue
 
-import "github.com/urfave/cli/v2"
+import (
+	"time"
+
+	"github.com/urfave/cli/v2"
+)
 
 // Flags represents all supported command line
 // interface (CLI) flags for the queue.
@@ -41,5 +45,11 @@ var Flags = []cli.Flag{
 		EnvVars: []string{"VELA_QUEUE_WORKER_ROUTES", "QUEUE_WORKER_ROUTES"},
 		Name:    "queue.worker.routes",
 		Usage:   "queue worker routes is configuration for routing builds",
+	},
+	&cli.DurationFlag{
+		EnvVars: []string{"VELA_QUEUE_BLPOP_TIMEOUT", "QUEUE_BLPOP_TIMEOUT"},
+		Name:    "queue.worker.blpop.timeout",
+		Usage:   "queue timeout for the blpop call",
+		Value:   60 * time.Second,
 	},
 }

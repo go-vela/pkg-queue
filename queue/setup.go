@@ -6,6 +6,7 @@ package queue
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/go-vela/pkg-queue/queue/redis"
 	"github.com/go-vela/types/constants"
@@ -24,6 +25,8 @@ type Setup struct {
 	Config string
 	// channels to listen on for the queue
 	Routes []string
+	// timeout of the Blpop connection
+	Timeout time.Duration
 }
 
 // Redis creates and returns a Vela engine capable of
@@ -46,7 +49,7 @@ func (s *Setup) Redis() (Service, error) {
 	// create new Redis queue service
 	//
 	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#New
-	return redis.New(s.Config, routes...)
+	return redis.New(s.Config, s.Timeout, routes...)
 }
 
 // Kafka creates and returns a Vela engine capable of

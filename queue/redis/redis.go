@@ -7,6 +7,7 @@ package redis
 import (
 	"fmt"
 	"strings"
+
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
@@ -18,13 +19,14 @@ type client struct {
 	Queue    *redis.Client
 	Options  *redis.Options
 	Channels []string
+	Timeout  time.Duration
 }
 
 // New returns a Queue implementation that
 // integrates with a Redis queue instance.
 //
 // nolint: golint // ignore returning unexported client
-func New(url string, channels ...string) (*client, error) {
+func New(url string, timeout time.Duration, channels ...string) (*client, error) {
 	// parse the url provided
 	options, err := redis.ParseURL(url)
 	if err != nil {
@@ -45,6 +47,7 @@ func New(url string, channels ...string) (*client, error) {
 		Queue:    queue,
 		Options:  options,
 		Channels: channels,
+		Timeout:  timeout,
 	}
 
 	return client, nil
