@@ -7,6 +7,7 @@ package queue
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-vela/pkg-queue/queue/redis"
 	"github.com/go-vela/types/constants"
@@ -25,6 +26,8 @@ type Setup struct {
 	Config string
 	// channels to listen on for the queue
 	Routes []string
+	// timeout of the Blpop connection
+	Timeout time.Duration
 }
 
 // Redis creates and returns a Vela engine capable of
@@ -42,6 +45,7 @@ func (s *Setup) Redis() (Service, error) {
 		redis.WithAddress(s.Config),
 		redis.WithChannels(s.Routes...),
 		redis.WithCluster(s.Cluster),
+		redis.WithTimeout(s.Timeout),
 	)
 }
 
