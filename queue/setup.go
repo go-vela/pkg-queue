@@ -23,7 +23,7 @@ type Setup struct {
 	Driver string
 	// specifies the address to use for the queue client
 	Address string
-	// enables the client to integrate with a queue cluster
+	// enables the queue client to integrate with a queue cluster
 	Cluster bool
 	// specifies a list of routes (channels/topics) for managing builds for the queue client
 	Routes []string
