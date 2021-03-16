@@ -5,6 +5,8 @@
 package redis
 
 import (
+	"context"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,7 +17,7 @@ func (c *client) Push(channel string, item []byte) error {
 	// build a redis queue command to push an item to queue
 	//
 	// https://pkg.go.dev/github.com/go-redis/redis?tab=doc#Client.RPush
-	pushCmd := c.Queue.RPush(channel, item)
+	pushCmd := c.Queue.RPush(context.Background(), channel, item)
 
 	// blocking call to push an item to queue and return err
 	//

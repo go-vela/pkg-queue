@@ -5,6 +5,7 @@
 package redis
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -29,7 +30,7 @@ func TestRedis_Pop_Success(t *testing.T) {
 	// seed queue
 	item, _ := json.Marshal(want)
 
-	err := c.Queue.RPush("vela", item).Err()
+	err := c.Queue.RPush(context.Background(), "vela", item).Err()
 	if err != nil {
 		t.Error("RPush should not have returned err: ", err)
 	}
@@ -52,7 +53,7 @@ func TestRedis_Pop_BadChannel(t *testing.T) {
 	// overwrite channel to be invalid
 	c.Channels = nil
 
-	err := c.Queue.RPush("vela", nil).Err()
+	err := c.Queue.RPush(context.Background(), "vela", nil).Err()
 	if err != nil {
 		t.Error("RPush should not have returned err: ", err)
 	}
@@ -68,7 +69,7 @@ func TestRedis_Pop_BadItem(t *testing.T) {
 	// setup redis mock
 	c, _ := NewTest("vela")
 
-	err := c.Queue.RPush("vela", nil).Err()
+	err := c.Queue.RPush(context.Background(), "vela", nil).Err()
 	if err != nil {
 		t.Error("RPush should not have returned err: ", err)
 	}

@@ -5,9 +5,10 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/go-vela/types"
 	"github.com/sirupsen/logrus"
 )
@@ -19,7 +20,7 @@ func (c *client) Pop() (*types.Item, error) {
 	// build a redis queue command to pop an item from queue
 	//
 	// https://pkg.go.dev/github.com/go-redis/redis?tab=doc#Client.BLPop
-	popCmd := c.Queue.BLPop(c.Timeout, c.Channels...)
+	popCmd := c.Queue.BLPop(context.Background(), c.Timeout, c.Channels...)
 
 	// blocking call to pop item from queue
 	//
