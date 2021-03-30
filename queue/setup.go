@@ -28,7 +28,7 @@ type Setup struct {
 	Cluster bool
 	// specifies a list of routes (channels/topics) for managing builds for the queue client
 	Routes []string
-	// timeout of the Blpop connection
+	// specifies the timeout for pop requests for the queue client
 	Timeout time.Duration
 }
 
@@ -44,7 +44,7 @@ func (s *Setup) Redis() (Service, error) {
 	//
 	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#New
 	return redis.New(
-		redis.WithAddress(s.Config),
+		redis.WithAddress(s.Address),
 		redis.WithChannels(s.Routes...),
 		redis.WithCluster(s.Cluster),
 		redis.WithTimeout(s.Timeout),

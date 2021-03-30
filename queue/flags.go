@@ -7,7 +7,7 @@ package queue
 import (
 	"time"
 
-  "github.com/go-vela/types/constants"
+	"github.com/go-vela/types/constants"
 	"github.com/urfave/cli/v2"
 )
 
@@ -56,9 +56,9 @@ var Flags = []cli.Flag{
 		Value:   cli.NewStringSlice(constants.DefaultRoute),
 	},
 	&cli.DurationFlag{
-		EnvVars: []string{"VELA_QUEUE_BLPOP_TIMEOUT", "QUEUE_BLPOP_TIMEOUT"},
-		Name:    "queue.worker.blpop.timeout",
-		Usage:   "queue timeout for the blpop call",
+		EnvVars: []string{"VELA_QUEUE_POP_TIMEOUT", "QUEUE_POP_TIMEOUT"},
+		Name:    "queue.pop.timeout",
+		Usage:   "timeout for requests that pop items off the queue",
 		Value:   60 * time.Second,
 	},
 }
