@@ -7,6 +7,7 @@ package redis
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-vela/sdk-go/vela"
@@ -152,6 +153,7 @@ func TestRedis_New(t *testing.T) {
 			WithAddress(test.address),
 			WithChannels("foo"),
 			WithCluster(false),
+			WithTimeout(5*time.Second),
 		)
 
 		if test.failure {

@@ -7,6 +7,7 @@ package queue
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-vela/pkg-queue/queue/redis"
 	"github.com/go-vela/types/constants"
@@ -27,18 +28,26 @@ type Setup struct {
 	Cluster bool
 	// specifies a list of routes (channels/topics) for managing builds for the queue client
 	Routes []string
+	// timeout of the Blpop connection
+	Timeout time.Duration
 }
 
 // Redis creates and returns a Vela engine capable of
 // integrating with a Redis queue.
 func (s *Setup) Redis() (Service, error) {
+	// check if the default route is provided
+	if !strings.Contains(strings.Join(s.Routes, ","), constants.DefaultRoute) {
+		s.Routes = append(s.Routes, constants.DefaultRoute)
+	}
+
 	// create new Redis queue service
 	//
 	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#New
 	return redis.New(
-		redis.WithAddress(s.Address),
+		redis.WithAddress(s.Config),
 		redis.WithChannels(s.Routes...),
 		redis.WithCluster(s.Cluster),
+		redis.WithTimeout(s.Timeout),
 	)
 }
 

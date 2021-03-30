@@ -7,6 +7,7 @@ package redis
 import (
 	"fmt"
 	"strings"
+
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
@@ -15,12 +16,14 @@ import (
 )
 
 type config struct {
-	// specifies the Redis address to use
+	// specifies the address to use for the Redis client
 	Address string
-	// specifies a list of channels for managing builds
+	// specifies a list of channels for managing builds for the Redis client
 	Channels []string
-	// enables the client to integrate with a Redis cluster
+	// enables the Redis client to integrate with a Redis cluster
 	Cluster bool
+	// specifies the timeout to use for the Redis client
+	Timeout time.Duration
 }
 
 type client struct {

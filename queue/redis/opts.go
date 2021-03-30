@@ -6,6 +6,7 @@ package redis
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -54,6 +55,18 @@ func WithCluster(cluster bool) ClientOpt {
 	return func(c *client) error {
 		// set the queue clustering mode in the redis client
 		c.config.Cluster = cluster
+
+		return nil
+	}
+}
+
+// WithTimeout sets the Redis timeout in the queue client.
+func WithTimeout(timeout time.Duration) ClientOpt {
+	logrus.Trace("configuring timeout in redis queue client")
+
+	return func(c *client) error {
+		// set the queue timeout in the redis client
+		c.config.Timeout = timeout
 
 		return nil
 	}
