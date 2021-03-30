@@ -15,72 +15,69 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type client struct {
-	Queue    *redis.Client
-	Options  *redis.Options
+type config struct {
+	// specifies the address to use for the Redis client
+	Address string
+	// specifies a list of channels for managing builds for the Redis client
 	Channels []string
-	Timeout  time.Duration
+	// enables the Redis client to integrate with a Redis cluster
+	Cluster bool
+	// specifies the timeout to use for the Redis client
+	Timeout time.Duration
+}
+
+type client struct {
+	config  *config
+	Queue   *redis.Client
+	Options *redis.Options
 }
 
 // New returns a Queue implementation that
 // integrates with a Redis queue instance.
 //
 // nolint: golint // ignore returning unexported client
-func New(url string, timeout time.Duration, channels ...string) (*client, error) {
+func New(opts ...ClientOpt) (*client, error) {
+	// create new Redis client
+	c := new(client)
+
+	// create new fields
+	c.config = new(config)
+	c.Queue = new(redis.Client)
+	c.Options = new(redis.Options)
+
+	// apply all provided configuration options
+	for _, opt := range opts {
+		err := opt(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// parse the url provided
-	options, err := redis.ParseURL(url)
+	options, err := redis.ParseURL(c.config.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	// create the Redis client from the parsed url
-	queue := redis.NewClient(options)
+	// create the Redis options from the parsed url
+	c.Options = options
+
+	// check if clustering mode is enabled
+	if c.config.Cluster {
+		// create the Redis cluster client from the options
+		c.Queue = redis.NewFailoverClient(failoverFromOptions(c.Options))
+	} else {
+		// create the Redis client from the parsed url
+		c.Queue = redis.NewClient(c.Options)
+	}
 
 	// ping the queue
-	err = pingQueue(queue)
+	err = pingQueue(c.Queue)
 	if err != nil {
 		return nil, err
 	}
 
-	// create the client object
-	client := &client{
-		Queue:    queue,
-		Options:  options,
-		Channels: channels,
-		Timeout:  timeout,
-	}
-
-	return client, nil
-}
-
-// NewCluster returns a Queue implementation that
-// integrates with a Redis queue cluster.
-//
-// nolint: golint // ignore returning unexported client
-func NewCluster(config string, channels ...string) (*client, error) {
-	// parse the url provided
-	options, err := redis.ParseURL(config)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the Redis client from failover options
-	queue := redis.NewFailoverClient(failoverFromOptions(options))
-
-	// ping the queue
-	err = pingQueue(queue)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the client object
-	client := &client{
-		Queue:    queue,
-		Options:  options,
-		Channels: channels,
-	}
-
-	return client, nil
+	return c, nil
 }
 
 // failoverFromOptions is a helper function to create
@@ -164,22 +161,17 @@ func pingQueue(client *redis.Client) error {
 //
 // nolint: golint // ignore returning unexported client
 func NewTest(channels ...string) (*client, error) {
-	// run a local fake redis instance
-	mr, err := miniredis.Run()
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	_redis, err := miniredis.Run()
 	if err != nil {
 		return nil, err
 	}
 
-	// create the Redis client from the parsed url
-	queue := redis.NewClient(&redis.Options{
-		Addr: mr.Addr(),
-	})
-
-	// create the client object
-	client := &client{
-		Queue:    queue,
-		Channels: channels,
-	}
-
-	return client, nil
+	return New(
+		WithAddress(fmt.Sprintf("redis://%s", _redis.Addr())),
+		WithChannels(channels...),
+		WithCluster(false),
+	)
 }

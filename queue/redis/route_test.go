@@ -12,9 +12,9 @@ import (
 	"github.com/go-vela/types/pipeline"
 )
 
-func TestDatabase_Client_Route(t *testing.T) {
+func TestRedis_Client_Route(t *testing.T) {
 	// setup
-	client, _ := NewTest()
+	client, _ := NewTest("vela")
 	tests := []struct {
 		want   string
 		worker pipeline.Worker
