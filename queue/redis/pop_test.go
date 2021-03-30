@@ -51,7 +51,7 @@ func TestRedis_Pop_BadChannel(t *testing.T) {
 	c, _ := NewTest("vela")
 
 	// overwrite channel to be invalid
-	c.Channels = nil
+	c.config.Channels = nil
 
 	err := c.Queue.RPush(context.Background(), "vela", nil).Err()
 	if err != nil {

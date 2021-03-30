@@ -9,10 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Bose/minisentinel"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-vela/sdk-go/vela"
-	"github.com/go-vela/types/constants"
 	"github.com/go-vela/types/library"
 	"github.com/go-vela/types/pipeline"
 )
@@ -122,86 +120,52 @@ var (
 	}
 )
 
-func TestRedis_New_Success(t *testing.T) {
-	// setup redis
-	redis, _ := miniredis.Run()
-
+func TestRedis_New(t *testing.T) {
 	// setup types
-	uri := fmt.Sprintf("redis://%s", redis.Addr())
 
-	// run test
-	_, err := New(uri, 5*time.Second, constants.DefaultRoute)
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	_redis, err := miniredis.Run()
 	if err != nil {
-		t.Error("New should not have returned err: ", err)
+		t.Errorf("unable to create miniredis instance: %v", err)
 	}
-}
+	defer _redis.Close()
 
-func TestRedis_New_Failure(t *testing.T) {
-	// setup redis
-	redis, _ := miniredis.Run()
-
+	// setup tests
 	tests := []struct {
-		data string
-		want error
+		failure bool
+		address string
 	}{
-		{ // connection uri with invalid URI
-			data: redis.Addr(),
-			want: fmt.Errorf(""),
+		{
+			failure: false,
+			address: fmt.Sprintf("redis://%s", _redis.Addr()),
+		},
+		{
+			failure: true,
+			address: "",
 		},
 	}
 
 	// run tests
 	for _, test := range tests {
-		// run test
-		_, err := New(test.data, 5*time.Second, constants.DefaultRoute)
-		if err == nil {
-			t.Errorf("New should have returned err")
+		_, err := New(
+			WithAddress(test.address),
+			WithChannels("foo"),
+			WithCluster(false),
+			WithTimeout(5*time.Second),
+		)
+
+		if test.failure {
+			if err == nil {
+				t.Errorf("New should have returned err")
+			}
+
+			continue
 		}
-	}
-}
 
-func TestRedis_NewCluster_Success(t *testing.T) {
-	// setup redis
-	replica, _ := miniredis.Run()
-	redis := minisentinel.NewSentinel(replica, minisentinel.WithReplica(replica))
-	_ = redis.Start()
-
-	// setup types
-	uri := fmt.Sprintf("redis://%s,%s", redis.MasterInfo().Name, redis.Addr())
-
-	// run test
-	_, err := NewCluster(uri, constants.DefaultRoute)
-	if err != nil {
-		t.Error("NewCluster should not have returned err: ", err)
-	}
-}
-
-func TestRedis_NewCluster_Failure(t *testing.T) {
-	// setup redis
-	replica, _ := miniredis.Run()
-	redis := minisentinel.NewSentinel(replica, minisentinel.WithReplica(replica))
-	_ = redis.Start()
-
-	tests := []struct {
-		data string
-		want error
-	}{
-		{ // connection uri with invalid URI
-			data: fmt.Sprintf("%s,%s", redis.MasterInfo().Name, redis.Addr()),
-			want: fmt.Errorf(""),
-		},
-		{ // connection uri that will timeout
-			data: fmt.Sprintf("redis://%s,%s", redis.MasterInfo().Name, "localhost"),
-			want: fmt.Errorf(""),
-		},
-	}
-
-	// run tests
-	for _, test := range tests {
-		// run test
-		_, err := New(test.data, 5*time.Second, constants.DefaultRoute)
-		if err == nil {
-			t.Errorf("New should have returned err")
+		if err != nil {
+			t.Errorf("New returned err: %v", err)
 		}
 	}
 }

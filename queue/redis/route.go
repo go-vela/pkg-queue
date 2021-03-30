@@ -16,7 +16,7 @@ import (
 
 // Route decides which route a build gets placed within the queue.
 func (c *client) Route(w *pipeline.Worker) (string, error) {
-	logrus.Tracef("deciding route from queues %s", c.Channels)
+	logrus.Tracef("deciding route from queue channels %s", c.config.Channels)
 
 	// create buffer to store route
 	buf := bytes.Buffer{}
