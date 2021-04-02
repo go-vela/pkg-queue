@@ -18,21 +18,25 @@ import (
 // creating a Vela service capable of integrating
 // with a configured queue environment.
 type Setup struct {
-	// specifies the queue driver to use
+	// Queue Configuration
+
+	// specifies the driver to use for the queue client
 	Driver string
-	// enables the queue client to integrate with a cluster
+	// specifies the address to use for the queue client
+	Address string
+	// enables the queue client to integrate with a queue cluster
 	Cluster bool
-	// configuration string for the queue
-	Config string
-	// channels to listen on for the queue
+	// specifies a list of routes (channels/topics) for managing builds for the queue client
 	Routes []string
-	// timeout of the Blpop connection
+	// specifies the timeout for pop requests for the queue client
 	Timeout time.Duration
 }
 
-// Redis creates and returns a Vela engine capable of
-// integrating with a Redis queue.
+// Redis creates and returns a Vela service capable
+// of integrating with a Redis queue.
 func (s *Setup) Redis() (Service, error) {
+	logrus.Trace("creating redis queue client from setup")
+
 	// check if the default route is provided
 	if !strings.Contains(strings.Join(s.Routes, ","), constants.DefaultRoute) {
 		s.Routes = append(s.Routes, constants.DefaultRoute)
@@ -42,32 +46,49 @@ func (s *Setup) Redis() (Service, error) {
 	//
 	// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue/redis?tab=doc#New
 	return redis.New(
-		redis.WithAddress(s.Config),
+		redis.WithAddress(s.Address),
 		redis.WithChannels(s.Routes...),
 		redis.WithCluster(s.Cluster),
 		redis.WithTimeout(s.Timeout),
 	)
 }
 
-// Kafka creates and returns a Vela engine capable of
-// integrating with a Kafka queue.
+// Kafka creates and returns a Vela service capable
+// of integrating with a Kafka queue.
 func (s *Setup) Kafka() (Service, error) {
-	logrus.Tracef("Creating %s queue client from CLI configuration", constants.DriverKafka)
-	// return kafka.New(c.String("queue-config"), "vela")
+	logrus.Trace("creating kafka queue client from setup")
+
 	return nil, fmt.Errorf("unsupported queue driver: %s", constants.DriverKafka)
 }
 
 // Validate verifies the necessary fields for the
 // provided configuration are populated correctly.
 func (s *Setup) Validate() error {
-	logrus.Trace("Validating queue CLI configuration")
+	logrus.Trace("validating queue setup for client")
 
+	// verify a queue driver was provided
 	if len(s.Driver) == 0 {
-		return fmt.Errorf("queue.driver (VELA_QUEUE_DRIVER or QUEUE_DRIVER) flag not specified")
+		return fmt.Errorf("no queue driver provided")
 	}
 
-	if len(s.Config) == 0 {
-		return fmt.Errorf("queue.config (VELA_QUEUE_CONFIG or QUEUE_CONFIG) flag not specified")
+	// verify a queue address was provided
+	if len(s.Address) == 0 {
+		return fmt.Errorf("no queue address provided")
+	}
+
+	// check if the queue address has a scheme
+	if !strings.Contains(s.Address, "://") {
+		return fmt.Errorf("queue address must be fully qualified (<scheme>://<host>)")
+	}
+
+	// check if the queue address has a trailing slash
+	if strings.HasSuffix(s.Address, "/") {
+		return fmt.Errorf("queue address must not have trailing slash")
+	}
+
+	// verify queue routes were provided
+	if len(s.Routes) == 0 {
+		return fmt.Errorf("no queue routes provided")
 	}
 
 	// setup is valid
