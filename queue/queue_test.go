@@ -6,79 +6,80 @@ package queue
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/Bose/minisentinel"
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-vela/types/constants"
 )
 
-func TestQueue_New_Success(t *testing.T) {
-	// setup redis
-	replica, _ := miniredis.Run()
-	redis := minisentinel.NewSentinel(replica, minisentinel.WithReplica(replica))
-	_ = redis.Start()
+func TestQueue_New(t *testing.T) {
+	// setup types
 
+	// create a local fake redis instance
+	//
+	// https://pkg.go.dev/github.com/alicebob/miniredis/v2#Run
+	_redis, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("unable to create miniredis instance: %v", err)
+	}
+	defer _redis.Close()
+
+	// setup tests
 	tests := []struct {
-		data *Setup
-		want error
+		failure bool
+		setup   *Setup
 	}{
-		{ // test non for clustered redis client
-			data: &Setup{
-				Driver:  constants.DriverRedis,
-				Config:  fmt.Sprintf("redis://%s", replica.Addr()),
+		{
+			failure: false,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: fmt.Sprintf("redis://%s", _redis.Addr()),
+				Routes:  []string{"foo"},
 				Cluster: false,
-				Routes:  []string{},
 			},
-			want: nil,
 		},
-		{ // test non for cluster redis client
-			data: &Setup{
-				Driver:  constants.DriverRedis,
-				Config:  fmt.Sprintf("redis://%s,%s", redis.MasterInfo().Name, redis.Addr()),
-				Cluster: true,
-				Routes:  []string{},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "kafka",
+				Address: "kafka://kafka.example.com",
+				Routes:  []string{"foo"},
+				Cluster: false,
 			},
-			want: nil,
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "pubsub",
+				Address: "pubsub://pubsub.example.com",
+				Routes:  []string{"foo"},
+				Cluster: false,
+			},
+		},
+		{
+			failure: true,
+			setup: &Setup{
+				Driver:  "redis",
+				Address: "",
+				Routes:  []string{"foo"},
+				Cluster: false,
+			},
 		},
 	}
 
 	// run tests
 	for _, test := range tests {
-		// run test
-		_, err := New(test.data)
+		_, err := New(test.setup)
+
+		if test.failure {
+			if err == nil {
+				t.Errorf("New should have returned err")
+			}
+
+			continue
+		}
+
 		if err != nil {
-			t.Errorf("New should not have returned err: %w", err)
-		}
-	}
-}
-
-func TestQueue_New_Failure(t *testing.T) {
-	tests := []struct {
-		data *Setup
-		want error
-	}{
-		{ // test for unsupported kafka
-			data: &Setup{Driver: "kafka", Config: "localhost:9946"},
-			want: fmt.Errorf("unsupported queue driver: kafka"),
-		},
-		{ // test for invalid queues
-			data: &Setup{Driver: "foobar", Config: "bad:config"},
-			want: fmt.Errorf("invalid queue driver: foobar"),
-		},
-	}
-
-	// run tests
-	for _, test := range tests {
-		// run test
-		_, err := New(test.data)
-		if err == nil {
-			t.Error("New should have returned err")
-		}
-
-		if !strings.EqualFold(err.Error(), test.want.Error()) {
-			t.Errorf("Err is %v, want %v", err, test.want)
+			t.Errorf("New returned err: %v", err)
 		}
 	}
 }
