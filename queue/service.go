@@ -5,6 +5,8 @@
 package queue
 
 import (
+	"context"
+
 	"github.com/go-vela/types"
 	"github.com/go-vela/types/pipeline"
 )
@@ -14,11 +16,11 @@ import (
 type Service interface {
 	// Pop defines a function that grabs an
 	// item off the queue.
-	Pop() (*types.Item, error)
+	Pop(context.Context) (*types.Item, error)
 
 	// Push defines a function that publishes an
 	// item to the specified route in the queue.
-	Push(string, []byte) error
+	Push(context.Context, string, []byte) error
 
 	// Route defines a function that decides which
 	// channel a build gets placed within the queue.
