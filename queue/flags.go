@@ -20,13 +20,13 @@ var Flags = []cli.Flag{
 	// Logger Flags
 
 	&cli.StringFlag{
-		EnvVars: []string{"QUEUE_LOG_FORMAT", "VELA_LOG_FORMAT", "LOG_FORMAT"},
+		EnvVars: []string{"VELA_QUEUE_LOG_FORMAT", "QUEUE_LOG_FORMAT", "VELA_LOG_FORMAT"},
 		Name:    "queue.log.format",
 		Usage:   "format of logs to output",
 		Value:   "json",
 	},
 	&cli.StringFlag{
-		EnvVars: []string{"QUEUE_LOG_LEVEL", "VELA_LOG_LEVEL", "LOG_LEVEL"},
+		EnvVars: []string{"VELA_QUEUE_LOG_LEVEL", "QUEUE_LOG_LEVEL", "VELA_LOG_LEVEL"},
 		Name:    "queue.log.level",
 		Usage:   "level of logs to output",
 		Value:   "info",
