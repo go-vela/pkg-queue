@@ -5,13 +5,14 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
 
@@ -136,7 +137,7 @@ func pingQueue(client *redis.Client) error {
 	// attempt 10 times
 	for i := 0; i < 10; i++ {
 		// send ping request to client
-		err := client.Ping().Err()
+		err := client.Ping(context.Background()).Err()
 		if err != nil {
 			logrus.Debugf("unable to ping Redis queue. Retrying in %v", (time.Duration(i) * time.Second))
 			time.Sleep(1 * time.Second)
