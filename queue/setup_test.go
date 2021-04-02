@@ -55,7 +55,7 @@ func TestQueue_Setup_Kafka(t *testing.T) {
 	}
 }
 
-func TestSource_Setup_Validate(t *testing.T) {
+func TestQueue_Setup_Validate(t *testing.T) {
 	// setup tests
 	tests := []struct {
 		failure bool
