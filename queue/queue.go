@@ -13,9 +13,9 @@ import (
 
 // nolint: godot // ignore period at end for comment ending in a list
 //
-// New creates and returns a Vela service capable of integrating
-// with the configured queue environments. Currently the
-// following queues are supported:
+// New creates and returns a Vela service capable of
+// integrating with the configured queue environment.
+// Currently, the following queues are supported:
 //
 // * redis
 func New(s *Setup) (Service, error) {
@@ -41,6 +41,7 @@ func New(s *Setup) (Service, error) {
 		// https://pkg.go.dev/github.com/go-vela/pkg-queue/queue?tab=doc#Setup.Redis
 		return s.Redis()
 	default:
+		// handle an invalid queue driver being provided
 		return nil, fmt.Errorf("invalid queue driver provided: %s", s.Driver)
 	}
 }

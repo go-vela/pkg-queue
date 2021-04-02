@@ -32,9 +32,11 @@ type Setup struct {
 	Timeout time.Duration
 }
 
-// Redis creates and returns a Vela engine capable of
-// integrating with a Redis queue.
+// Redis creates and returns a Vela service capable
+// of integrating with a Redis queue.
 func (s *Setup) Redis() (Service, error) {
+	logrus.Trace("creating redis queue client from setup")
+
 	// check if the default route is provided
 	if !strings.Contains(strings.Join(s.Routes, ","), constants.DefaultRoute) {
 		s.Routes = append(s.Routes, constants.DefaultRoute)
@@ -51,8 +53,8 @@ func (s *Setup) Redis() (Service, error) {
 	)
 }
 
-// Kafka creates and returns a Vela engine capable of
-// integrating with a Kafka queue.
+// Kafka creates and returns a Vela service capable
+// of integrating with a Kafka queue.
 func (s *Setup) Kafka() (Service, error) {
 	logrus.Trace("creating kafka queue client from setup")
 
