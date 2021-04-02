@@ -5,29 +5,61 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/go-vela/types"
 )
 
-func TestRedis_Push_Success(t *testing.T) {
-	// setup redis mock
-	c, _ := NewTest("vela")
+func TestRedis_Push(t *testing.T) {
+	// setup types
 
-	// set types
-	//
 	// use global variables in redis_test.go
-	item, _ := json.Marshal(&types.Item{
+	_item := &types.Item{
 		Build:    _build,
 		Pipeline: _steps,
 		Repo:     _repo,
 		User:     _user,
-	})
+	}
 
-	// run test
-	err := c.Push("vela", item)
+	// setup queue item
+	bytes, err := json.Marshal(_item)
 	if err != nil {
-		t.Error("Pop should not have returned err: ", err)
+		t.Errorf("unable to marshal queue item: %v", err)
+	}
+
+	// setup redis mock
+	_redis, err := NewTest("vela")
+	if err != nil {
+		t.Errorf("unable to create queue service: %v", err)
+	}
+
+	// setup tests
+	tests := []struct {
+		failure bool
+		redis   *client
+	}{
+		{
+			failure: false,
+			redis:   _redis,
+		},
+	}
+
+	// run tests
+	for _, test := range tests {
+		err := _redis.Push(context.Background(), "vela", bytes)
+
+		if test.failure {
+			if err == nil {
+				t.Errorf("Push should have returned err")
+			}
+
+			continue
+		}
+
+		if err != nil {
+			t.Errorf("Push returned err: %v", err)
+		}
 	}
 }
