@@ -14,6 +14,12 @@ import (
 // Service represents the interface for Vela integrating
 // with the different supported Queue backends.
 type Service interface {
+	// Service Interface Functions
+
+	// Driver defines a function that outputs
+	// the configured queue driver.
+	Driver() string
+
 	// Pop defines a function that grabs an
 	// item off the queue.
 	Pop(context.Context) (*types.Item, error)
