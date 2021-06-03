@@ -7,7 +7,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.14.5
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-gonic/gin v1.7.2
-	github.com/go-redis/redis/v8 v8.9.0
+	github.com/go-redis/redis/v8 v8.10.0
 	github.com/go-vela/sdk-go v0.8.0
 	github.com/go-vela/types v0.8.0
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
