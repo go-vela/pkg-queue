@@ -1,6 +1,6 @@
 module github.com/go-vela/pkg-queue
 
-go 1.15
+go 1.16
 
 require (
 	github.com/Bose/minisentinel v0.0.0-20200130220412-917c5a9223bb
@@ -15,5 +15,6 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.3.0
+	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
